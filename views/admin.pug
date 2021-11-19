@@ -1,0 +1,185 @@
+extends layout
+
+block admin
+
+    h1 #{title}
+    br
+
+    div#random(ng-app='app')
+        div(ng-controller='controller').container
+
+            // Button Selections
+            button.btn.btn-outline-danger(type="button" ng-click="waitingListEmail()") Waiting
+            button.btn.btn-outline-success(type="button" ng-click="alreadyReplyEmail()") Already Replied
+            button.btn.btn-outline-primary(type="button" ng-click="readAllEmailData()") All
+
+            // Admin Reply Form
+            form
+                #exampleModal.modal.fade(tabindex='-1' aria-labelledby='exampleModalLabel' aria-hidden='true')
+                    .modal-dialog
+                        .modal-content
+                            .modal-header
+                                h5#exampleModalLabel.modal-title Reply To The User
+                                button.close(type='button' data-dismiss='modal' aria-label='Close')
+                                    span(aria-hidden='true') &times;
+                            .modal-body
+                                .form-row
+                                    label Send To: {{replyUserEmail}}
+                                .form-row
+                                    label Previous Title: {{replyUserTitle}}
+                                .form-row
+                                    label Previous Message:{{replyUserContent}}
+                                .form-row
+                                    label Title
+                                    input#validationServer01.form-control(type='text' name='senderTitle' required='' data-ng-model='inputSenderTitle')
+                                .form-group
+                                    label Content Details
+                                    textarea#exampleFormControlTextarea1.form-control(name='senderContent' rows='3' data-ng-model='inputSenderContent')
+                            .modal-footer
+                                button.btn.btn-success(ng-click='ReplyUserEmail(inputSenderTitle,inputSenderContent)' ) Send
+                                //data-dismiss='modal'
+
+
+            // Display Email Data Table
+            h1 Email
+            table.table.table-striped
+                thead.thead-dark
+                    tr
+                        th(scope='col') Action
+                        //th(scope='col') RAW
+                        th(scope='col') Email
+                        th(scope='col') Title
+                        th(scope='col') Content
+
+                tbody
+                    tr(ng-repeat="x in emailResult" scope="row")
+                        th(scope='row')
+                            button.col.btn.btn-success(ng-click='OpenModal(x)' type='button' ng-disabled='x.replyAlready') Reply
+                            //button.col.btn.btn-success(data-toggle='modal' data-target='#exampleModal' type='button') Reply
+                            //button.col.btn.btn-danger(type='button') Pin
+                        //td {{x |json}}
+                        td {{x.email}}
+                        td {{x.title}}
+                        td {{x.content}}
+
+            // Display User Feedback Table
+            h1 Feedback
+            table.table.container
+                thead.thead-dark
+                    tr
+                        //th(scope='col') Action
+                        th(scope='col') Name
+                        th(scope='col') Email
+                        th(scope='col') Content
+                tbody
+                    tr(ng-repeat="x in FeedbackResult" scope="row")
+                        td {{x.nameFeedback}}
+                        td {{x.emailFeedback}}
+                        td {{x.contentFeedback}}
+
+
+        // ================================================= Angular Script ========================================
+        script.
+            var myApp = angular.module("app", []);
+            myApp.controller("controller", function ($scope, $http, $window) {
+
+                // Read All Email From Database
+                $scope.readAllEmailData = function () {
+                    $http.post('/read/all', {})
+                        .success(function (response) {
+                            console.log(response);
+                            $scope.emailResult = response
+                        })
+                        .error(function (response) {
+                            console.log('Here is error')
+                            console.log(response)
+                        });
+                }
+
+                // Waiting Reply List
+                $scope.waitingListEmail = function (x) {
+                    $http.post('/waitingListEmail', {})
+                        .success(function (response) {
+                            console.log(response);
+                            $scope.emailResult = response;
+                        })
+                        .error(function (response) {
+                            console.log('Here is error')
+                            console.log(response)
+                        });
+                }
+
+                // Already Reply List
+                $scope.alreadyReplyEmail = function () {
+                    $http.post('/alreadyReplyEmail', {})
+                        .success(function (response) {
+                            $scope.alreadyReplyEmail = response
+                            console.log(response);
+                            $scope.emailResult = response;
+                        })
+                        .error(function (response) {
+                            console.log('Here is error')
+                            console.log(response)
+                        });
+                }
+
+                // Read Feedback From Database
+                $scope.readAllFeedbackData = function () {
+                    $http.post('/read/allFeedback', {})
+                        .success(function (response) {
+                            $scope.FeedbackResult = response
+                            console.log(response);
+                        })
+                        .error(function (response) {
+                            console.log('Here is error')
+                            console.log(response)
+                        });
+                }
+
+                //Insert Admin's Reply Data Into Backend And Trigger Nodemailer to Reply User
+                $scope.ReplyUserEmail = function (inputSenderTitle, inputSenderContent,) {
+                    if ($scope.inputSenderTitle && $scope.inputSenderContent) {
+                        console.log($scope.replyUserId);
+                        $http.post('/reply', {
+                            _id: $scope.replyUserId,
+                            inputReplyUserEmail: $scope.replyUserEmail,
+                            inputSenderTitle: inputSenderTitle,
+                            inputSenderContent: inputSenderContent,
+                            replyAlready: $scope.replyAlready
+                        }).success(function (data, status, headers, config) {
+                            $window.alert("Message Sent Successfully!");
+                        }).error(function (data, status, headers, config) {
+                            // called asynchronously if an error occurs
+                            // or server returns response with an error status.
+                        });
+                        return;
+                    } else {
+                        $window.alert("Please Enter Your Message. Thank you. ");
+                    }
+                }
+
+                // Open the Admin Reply Modal, Allow Admin Reply
+                $scope.OpenModal = function (emailResult) {
+
+                    console.log(emailResult.email);
+                    $scope.replyUserEmail = emailResult.email;
+
+                    console.log(emailResult.title);
+                    $scope.replyUserTitle = emailResult.title;
+
+                    console.log(emailResult.content);
+                    $scope.replyUserContent = emailResult.content;
+
+                    console.log(emailResult.replyAlready);
+                    $scope.replyAlready = false;
+
+                    console.log(emailResult._id);
+                    $scope.replyUserId = emailResult._id;
+
+                    $('#exampleModal').modal('show');
+                }
+
+                // Call the Function
+                $scope.readAllFeedbackData();
+                $scope.waitingListEmail();
+            });

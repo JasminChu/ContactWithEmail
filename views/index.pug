@@ -1,0 +1,163 @@
+extends layout
+
+block content
+
+    div(ng-app='app')
+        div(ng-controller='controller')
+            #banner
+                div.bg-text.rounded-lg.shadow-lg
+                    h2 We Are Here To Help
+                    h1(style='font-size:50px') - Contact Us -
+                    p We'd Love To Hear From You
+
+                    div#random.container.text-center.bg-food
+
+                        // =========================================  Feedback Button ===========================
+                        button.btn.btn-dark.position-fixed.my-2(data-toggle='modal' data-target='#exampleModal' type='button' style='bottom:0; right:2rem') Feedback
+
+                        // ==========================================  Contact Form Session =========================
+                        //method='POST' action='/route' (PHP methods)
+                        form
+                            .form-row
+                                .col-md-12.mb-3
+                                    label Name
+                                    input.form-control(type='text' required='' ng-model='contactForm.username')
+                                .col-md-12.mb-3
+                                    label Email
+                                    input.form-control(type='email' required='' ng-model='contactForm.email')
+                                    //value='abc123@soup.com'
+                            .form-row
+                                .col-md-12.mb-3
+                                    label Title
+                                    input.form-control(type='text' aria-describedby='validationServer03Feedback' required='' ng-model='contactForm.title')
+                            .form-group
+                                label Content Details
+                                textarea.form-control(name='content' rows='3' ng-model= 'contactForm.content')
+                            .form-group
+                                .form-check
+                                    input.form-check-input(type='checkbox' value='' aria-describedby='invalidCheck3Feedback' required='' )
+                                    label.form-check-label
+                                        | Agree to terms and conditions
+                                    .invalid-feedback
+                                        | You must agree before submitting.
+
+                            button.btn.btn-primary(ng-click='sendMail()') Submit form
+
+
+                // =======================================  Feedback Modal Session =================================
+                #exampleModal.modal.fade(tabindex='-1' aria-labelledby='exampleModalLabel' aria-hidden='true')
+                    .modal-dialog
+                        .modal-content
+                            .modal-header
+                                h5#exampleModalLabel.modal-title Tell Us Anything...
+                                button.close(type='button' data-dismiss='modal' aria-label='Close')
+                                    span(aria-hidden='true') &times;
+                            .modal-body
+                                .form-row
+                                    .col-md-6.mb-3
+                                        label Name
+                                        input#validationServer01.form-control(type='text' required='' ng-model='feedbackForm.name')
+                                    .col-md-6.mb-3
+                                        label Email
+                                        input#validationServer02.form-control(type='email'  required='' ng-model='feedbackForm.emial')
+                                .form-group
+                                    label Content Detail
+                                    textarea#exampleFormControlTextarea1.form-control( rows='3' ng-model='feedbackForm.content')
+                            .modal-footer
+                                button.btn.btn-success(ng-click='ShowAlert()') Send
+                                //data-dismiss='modal'
+
+
+    // ======= Contact Section =======
+    br.
+    br
+    section#contact.contact
+        .container
+            .section-title
+            .row
+                .col-lg-6
+                    .info-box.mb-4
+                        i.bi-alarm-fill
+                        h3 Our Address
+                        p LOT 3893, 1ST FLOOR, JALAN DOGAN DI JALAN BATU KAWA, 93250 KUCHING, SARAWAK
+                .col-lg-3.col-md-6
+                    .info-box.mb-4
+                        i.bx.bx-envelope
+                        h3 Email Us
+                        p contact@example.com
+                .col-lg-3.col-md-6
+                    .info-box.mb-4
+                        i.bx.bx-phone-call
+                        h3 Call Us
+                        p +1300 13 1300
+
+
+
+                // ============================================ Angular Script ========================================
+                script.
+                    var myApp = angular.module("app", []);
+                    myApp.controller("controller", function ($scope, $http, $window) {
+
+
+                        $scope.contactForm = {
+                            username: '',
+                            email: '',
+                            title: '',
+                            content: '',
+                            replyAlready: false
+                        };
+
+                        // Store User Input into database (Email Section)
+                        $scope.sendMail = function () {
+
+                            if ($scope.contactForm != "" ) {
+                                console.log('Successfully Connected to the Backend Server');
+                                $http.post('/route',$scope.contactForm)
+                                    .success(function (data, status, headers, config) {
+                                                                                                                                                     // this callback will be called asynchronously
+                                    // when the response is available
+                                }).error(function (data, status, headers, config) {
+                                    // called asynchronously if an error occurs
+                                    // or server returns response with an error status.
+                                });
+                                // document.getElementById('contactme').reset();
+                                $window.alert("Thank You For Your Information! We Successfully Received Your Message!");
+                                $scope.contactForm = "";
+
+                                return;
+                            } else {
+                                $window.alert("Please Enter Your Message. Thank you. ");
+                            }
+                        }
+
+
+                        $scope.feedbackForm = {
+                            name: '',
+                            email: '',
+                            content: '',
+                        };
+
+                        // Store User Input into database (Feedback)
+                        $scope.ShowAlert = function (inputanonymousName, inputanonymousEmail, inputanonymousContent) {
+                            if ($scope.feedbackForm != "") {
+                                $http.post('/feedback', {
+                                    nameFeedback: $scope.feedbackForm.name,
+                                    emailFeedback: $scope.feedbackForm.email,
+                                    contentFeedback: $scope.feedbackForm.content
+                                }).success(function (data, status, headers, config) {
+                                    // this callback will be called asynchronously
+                                    // when the response is available
+                                }).error(function (data, status, headers, config) {
+                                    // called asynchronously if an error occurs
+                                    // or server returns response with an error status.
+                                });
+                                $window.alert("Thank You For Your Information! We Successfully Received Your Message!");
+                                $scope.feedbackForm = "";
+
+                                return;
+                            } else {
+                                $window.alert("Please Enter Your Message. Thank you. ");
+                            }
+                        }
+                    });
+
